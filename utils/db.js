@@ -1,6 +1,7 @@
 import pg from 'pg';
 const {Pool} = pg;
 
+// use env later
 const pool = new Pool({
     user: 'postgres',
     password: 'password',
