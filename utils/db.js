@@ -8,3 +8,7 @@ const pool = new Pool({
     port: 5432, // default Postgres port
     database: 'testdb'
 })
+
+module.exports = {
+    query: (text, params) => pool.query(text, params)
+};
