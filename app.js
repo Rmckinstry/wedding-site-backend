@@ -1,5 +1,5 @@
-const express = require('express');
-const db = require('./utils/db');
+import express from 'express';
+import db from './utils/db.js';
 const app = express();
 const port = 3000;
 
