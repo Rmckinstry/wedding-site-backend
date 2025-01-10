@@ -5,6 +5,7 @@ const port = 3000;
 const tableName = "my_table"
 
 app.use(express.json());
+
 app.get('/', async (req, res)=>{
     try{
         const result = await db.query(`SELECT * FROM ${tableName}`);
@@ -18,10 +19,10 @@ app.get('/', async (req, res)=>{
 app.post('/', async (req, res) => {
     try {
         // Extract data from the request body
-        const { id, name } = req.body;
+        const {name } = req.body;
 
         // Parameterized query
-        const result = await db.query(`INSERT INTO ${tableName} (id, name) VALUES ($1, $2)`, [id, name]);
+        const result = await db.query(`INSERT INTO ${tableName} (name) VALUES ($1)`, [name]);
         res.status(201).send('Data inserted successfully');
     } catch (err) {
         console.error(err);
@@ -58,6 +59,11 @@ app.delete('/:id', async(req, res)=>{
         const {id} = req.params;
 
         const result = await db.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).send('Record not found');
+        }
+
         res.status(200).send('Record deleted successfully');
 
     } catch (err) {
