@@ -55,10 +55,14 @@ app.put('/:id', async(req, res)=>{
 
 app.delete('/:id', async(req, res)=>{
     try {
-        
+        const {id} = req.params;
+
+        const result = await db.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
+        res.status(200).send('Record deleted successfully');
+
     } catch (err) {
         console.error(err);
-        
+        res.status(500).send('Internal Server Error');
     }
 })
 
