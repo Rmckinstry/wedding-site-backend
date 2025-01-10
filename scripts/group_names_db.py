@@ -4,7 +4,7 @@ import psycopg2
 # Replace these with your actual PostgreSQL server details
 host = "localhost"
 port = 5432
-database = "test_db"
+database = "testdb"
 user = "postgres"
 password = "password"
 

@@ -2,7 +2,7 @@ import express from 'express';
 import db from './utils/db.js';
 const app = express();
 const port = 3000;
-const tableName = "my_table"
+const tableName = "groups"
 
 app.use(express.json());
 
@@ -16,13 +16,25 @@ app.get('/', async (req, res)=>{
     }
 })
 
+app.get('/:id', async(req, res)=>{
+    try {
+        const {id} = req.params;
+        const result = await db.query(`SELECT (group_name) FROM ${tableName} WHERE id = $1`, [id]);
+
+        res.json(result.rows)
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
 app.post('/', async (req, res) => {
     try {
         // Extract data from the request body
-        const {name } = req.body;
+        const {name} = req.body;
 
         // Parameterized query
-        const result = await db.query(`INSERT INTO ${tableName} (name) VALUES ($1)`, [name]);
+        const result = await db.query(`INSERT INTO ${tableName} (group_name) VALUES ($1)`, [name]);
         res.status(201).send('Data inserted successfully');
     } catch (err) {
         console.error(err);
@@ -40,7 +52,7 @@ app.put('/:id', async(req, res)=>{
             return res.status(400).send('Name is required');
         }
 
-        const result = await db.query(`UPDATE ${tableName} SET name = $2 WHERE id = $1`,[id, name]);
+        const result = await db.query(`UPDATE ${tableName} SET group_name = $2 WHERE id = $1`,[id, name]);
 
         // Check if any row was updated
         if (result.rowCount === 0) {
