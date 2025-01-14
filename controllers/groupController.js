@@ -1,8 +1,10 @@
 import express from 'express';
+import db from '../utils/db.js';
 
 const router = express.Router();
+const tableName = "groups"
 
-router.get('/', async (req, res)=>{
+export const getAllGroups = async (req, res) =>{
     try{
         const result = await db.query(`SELECT * FROM ${tableName}`);
         res.json(result.rows);
@@ -10,9 +12,9 @@ router.get('/', async (req, res)=>{
         console.error(err);
         res.status(500).send('Internal Server Error');
     }
-})
+}
 
-router.get('/:id', async(req, res)=>{
+export const getGroup = async (req, res) => {
     try {
         const {id} = req.params;
         const result = await db.query(`SELECT (group_name) FROM ${tableName} WHERE id = $1`, [id]);
@@ -22,9 +24,9 @@ router.get('/:id', async(req, res)=>{
         console.error(err);
         res.status(500).send('Internal Server Error');
     }
-})
+}
 
-router.post('/', async (req, res) => {
+export const addGroup = async (req, res) => {
     try {
         // Extract data from the request body
         const {name} = req.body;
@@ -36,9 +38,9 @@ router.post('/', async (req, res) => {
         console.error(err);
         res.status(500).send('Internal Server Error');
     }
-});
+}
 
-router.put('/:id', async(req, res)=>{
+export const editGroupName = async (req, res) =>{
     try {
         const {id} = req.params;
         const {name} = req.body;
@@ -60,9 +62,9 @@ router.put('/:id', async(req, res)=>{
         console.error(err);
         res.status(500).send('Internal Server Error');
     }
-})
+}
 
-router.delete('/:id', async(req, res)=>{
+export const deleteGroup = async (req, res) =>{
     try {
         const {id} = req.params;
 
@@ -78,4 +80,4 @@ router.delete('/:id', async(req, res)=>{
         console.error(err);
         res.status(500).send('Internal Server Error');
     }
-})
+}
