@@ -51,7 +51,7 @@ export const createUser = async (req, res) => {
             [name, email, plusOneAllowed, hasDependents, groupId]
         );
         res.status(201).json({
-            message: "Data inserted successfully",
+            message: "User inserted successfully",
             data: result.rows,
         });
     } catch (err) {
@@ -75,11 +75,11 @@ export const editUser = async (req, res) => {
         );
 
         if (result.rowCount === 0) {
-            return res.status(404).send("Record not found");
+            return res.status(404).send("User not found");
         }
 
         res.status(200).json({
-            message: "Record updated successfully",
+            message: "User updated successfully",
             data: result.rows,
         });
     } catch (err) {
@@ -134,3 +134,22 @@ export const editPlusOneAllowed = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
+
+// DELETE
+export const deleteUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const result = await db.query(`DELETE FROM ${tableName} WHERE user_id = $1`, [userId]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).send('Record not found');
+        }
+
+        res.status(200).send('User deleted successfully');
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+}
