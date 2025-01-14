@@ -3,11 +3,14 @@ import {getAllGroups, getGroup, addGroup, editGroupName, deleteGroup} from '../c
 
 const router = express.Router();
 
-// GET ALL
+// GET
 router.get('/', getAllGroups);
 router.get('/:id', getGroup);
+// POST
 router.post('/', addGroup);
+// PUT
 router.put('/:id', editGroupName);
+// DELETE
 router.delete('/:id', deleteGroup);
 
 export default router;

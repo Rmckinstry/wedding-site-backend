@@ -1,9 +1,11 @@
 import express from 'express';
-import groupsRoute from './groups.js'
+import groupsRoute from './groups.js';
+import usersRoute from './users.js';
 
 const router = express.Router();
 
 router.use('/groups', groupsRoute);
+router.use('/users', usersRoute);
 
 // catch-all route for undefined routes if needed
 router.use((req, res, next) => {
