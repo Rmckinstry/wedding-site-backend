@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, getUserById, getUserByGroup, createUser } from '../controllers/userController.js';
+import { getAllUsers, getUserById, getUserByGroup, createUser, editUser } from '../controllers/userController.js';
 
 
 const router = express.Router();
@@ -11,5 +11,8 @@ router.get('/group/:groupId', getUserByGroup);
 
 // POST
 router.post('', createUser);
+
+// PUT
+router.put('/:userId', editUser);
 
 export default router;
