@@ -5,7 +5,8 @@ import {
     deleteRSVPHandler,
     getRSVPHandler,
     getGuestRSVPHandler,
-    getGroupRSVPHandler
+    getGroupRSVPHandler,
+    editAttendanceHandler
 } from '../controllers/rsvpController.js';
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.get('/group/:groupId', getGroupRSVPHandler);
 // POST
 router.post('/', createRSVPHandler)
 // PUT
+router.patch('/attendance/:rsvpId', editAttendanceHandler);
 
 // DELETE
 router.delete('/:rsvpId', deleteRSVPHandler);

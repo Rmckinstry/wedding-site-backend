@@ -4,7 +4,8 @@ import {
     getRSVP,
     deleteRSVP,
     getGuestRSVP,
-    getGroupRSVPs
+    getGroupRSVPs,
+    editAttendance
 } from '../services/rsvpService.js';
 import { isNumber } from '../utils/utils.js'
 
@@ -114,6 +115,30 @@ export const deleteRSVPHandler = async (req, res) => {
 
         res.status(200).send('RSVP deleted successfully');
 
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+}
+
+export const editAttendanceHandler = async (req, res) => {
+    try {
+        const { rsvpId } = req.params;
+        const { attendance } = req.body;
+
+        if (rsvpId === "" || !isNumber(rsvpId)) {
+            return res.status(400).send("rsvpId must be a valid integer")
+        }
+
+        if (typeof attendance !== "boolean") {
+            return res.status(400).send("attendance must be type boolean")
+        }
+
+        const result = await editAttendance(rsvpId, attendance);
+        res.status(200).json({
+            message: "Attendance Updated",
+            data: result,
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');

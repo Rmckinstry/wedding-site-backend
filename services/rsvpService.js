@@ -34,7 +34,7 @@ export const getGuestRSVP = async (guestId) => {
 export const getGroupRSVPs = async (groupId) => {
     try {
         const result = await db.query(
-            `SELECT g.name AS guest_name, gp.group_name, gp.id, r.attendance, r.spotify, r.created_at
+            `SELECT g.name AS guest_name, gp.group_name, gp.id, r.rsvp_id, r.attendance, r.spotify, r.created_at
             FROM guests AS g
             JOIN groups AS gp ON g.group_id = gp.id
             JOIN rsvps AS r ON g.guest_id = r.guest_id
@@ -89,5 +89,21 @@ export const deleteRSVP = async (rsvpId) => {
 
     } catch (error) {
         throw new Error(`Failed to delete RSVP: ${error.message}`)
+    }
+}
+
+export const editAttendance = async (rsvpId, attendance) => {
+    try {
+        const result = await db.query(
+            `UPDATE ${tableName}
+            SET attendance = $1
+            WHERE rsvp_id = $2
+            RETURNING *`,
+            [attendance, rsvpId]
+        )
+
+        return result.rows
+    } catch (error) {
+        throw new Error(`Failed to edit RSVP attendance: ${error.message}`)
     }
 }
