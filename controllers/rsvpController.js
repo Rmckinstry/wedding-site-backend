@@ -42,7 +42,7 @@ export const createRSVP = async (req, res) => {
             data: rsvps,
         });
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).send('Internal Server Error');
     }
 }
