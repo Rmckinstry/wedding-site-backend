@@ -1,10 +1,10 @@
-import express from 'express';
 import {
     createRSVPs,
     getAllRSVPs,
     getRSVP,
     deleteRSVP
 } from '../services/rsvpService.js';
+import { isNumber } from '../utils/utils.js'
 
 export const getAllRSVPHandler = async (req, res) => {
     try {
@@ -20,7 +20,7 @@ export const getRSVPHandler = async (req, res) => {
     try {
         const { rsvpId } = req.params;
 
-        if (typeof rsvpId !== "number") {
+        if (rsvpId === "" || !isNumber(rsvpId)) {
             return res.status(400).send("rsvpId must be a valid integer")
         }
         const result = await getRSVP(rsvpId);
@@ -60,7 +60,7 @@ export const deleteRSVPHandler = async (req, res) => {
     try {
         const { rsvpId } = req.params;
 
-        if (typeof rsvpId !== "number") {
+        if (rsvpId === "" || !isNumber(rsvpId)) {
             return res.status(400).send("rsvpId must be a valid integer")
         }
 
