@@ -1,14 +1,14 @@
 import express from 'express';
-import { getAllRSVPs, createRSVP, getRSVP, deleteRSVP } from '../controllers/rsvpController.js';
+import { getAllRSVPHandler, createRSVPHandler, deleteRSVPHandler, getRSVPHandler } from '../controllers/rsvpController.js';
 const router = express.Router();
 
 // GET
-router.get('/', getAllRSVPs);
-router.get('/:rsvpId', getRSVP);
+router.get('/', getAllRSVPHandler);
+router.get('/:rsvpId', getRSVPHandler);
 // POST
-router.post('/', createRSVP)
+router.post('/', createRSVPHandler)
 // PUT
 
 // DELETE
-router.delete('/:rsvpId', deleteRSVP);
+router.delete('/:rsvpId', deleteRSVPHandler);
 export default router;

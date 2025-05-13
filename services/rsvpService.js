@@ -2,6 +2,25 @@ import db from "../utils/db.js";
 
 const tableName = "rsvps";
 
+export const getAllRSVPs = async () => {
+    try {
+        const result = await db.query(`SELECT * FROM ${tableName}`);
+        return result.rows
+    } catch (error) {
+        throw new Error(`Failed to fetch RSVPs: ${error.message}`)
+    }
+}
+
+export const getRSVP = async (rsvpId) => {
+    try {
+        const result = await db.query(`SELECT * FROM ${tableName} WHERE rsvp_id = $1`, [rsvpId]);
+        return result.rows[0];
+
+    } catch (error) {
+        throw new Error(`Failed to fetch RSVP: ${error.message}`)
+    }
+}
+
 export const createRSVPs = async (rsvpList) => {
     try {
         const client = await db.getClient();
@@ -36,5 +55,14 @@ export const createRSVPs = async (rsvpList) => {
         console.error("Error processing RSVPs:", error);
         res.status(500).send('Internal Server Error');
     }
+}
 
+export const deleteRSVP = async (rsvpId) => {
+    try {
+        const result = await db.query(`DELETE FROM ${tableName} WHERE rsvp_id = $1`, [rsvpId]);
+        return result;
+
+    } catch (error) {
+        throw new Error(`Failed to delete RSVP: ${error.message}`)
+    }
 }
