@@ -2,7 +2,9 @@ import {
     createRSVPs,
     getAllRSVPs,
     getRSVP,
-    deleteRSVP
+    deleteRSVP,
+    getGuestRSVP,
+    getGroupRSVPs
 } from '../services/rsvpService.js';
 import { isNumber } from '../utils/utils.js'
 
@@ -30,6 +32,46 @@ export const getRSVPHandler = async (req, res) => {
         }
 
         res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+}
+
+export const getGuestRSVPHandler = async (req, res) => {
+    try {
+        const { guestId } = req.params;
+
+        if (guestId === "" || !isNumber(guestId)) {
+            return res.status(400).send("guestId must be a valid integer")
+        }
+        const result = await getGuestRSVP(guestId);
+
+        if (!result) {
+            return res.status(404).send(`RSVP for guestid ${guestId}not found`);
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+}
+
+export const getGroupRSVPHandler = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        if (groupId === "" || !isNumber(groupId)) {
+            return res.status(400).send("groupId must be a valid integer")
+        }
+
+        const result = await getGroupRSVPs(groupId);
+
+        if (!result) {
+            return res.status(404).send(`RSVP for guestid ${guestId}not found`);
+        }
+        res.json(result);
+
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');

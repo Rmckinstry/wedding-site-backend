@@ -21,6 +21,31 @@ export const getRSVP = async (rsvpId) => {
     }
 }
 
+export const getGuestRSVP = async (guestId) => {
+    try {
+        const result = await db.query(`SELECT * FROM ${tableName} WHERE guest_id = $1`, [guestId]);
+        return result.rows[0];
+
+    } catch (error) {
+        throw new Error(`Failed to fetch guest RSVP: ${error.message}`)
+    }
+}
+
+export const getGroupRSVPs = async (groupId) => {
+    try {
+        const result = await db.query(
+            `SELECT g.name AS guest_name, gp.group_name, gp.id, r.attendance, r.spotify, r.created_at
+            FROM guests AS g
+            JOIN groups AS gp ON g.group_id = gp.id
+            JOIN rsvps AS r ON g.guest_id = r.guest_id
+            WHERE gp.id = $1`
+            , [groupId])
+        return result.rows
+    } catch (error) {
+        throw new Error(`Failed to fetch group RSVPs: ${error.message}`)
+    }
+}
+
 export const createRSVPs = async (rsvpList) => {
     try {
         const client = await db.getClient();
