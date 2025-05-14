@@ -34,7 +34,7 @@ export const getGuestRSVP = async (guestId) => {
 export const getGroupRSVPs = async (groupId) => {
     try {
         const result = await db.query(
-            `SELECT g.name AS guest_name, gp.group_name, gp.id, r.rsvp_id, r.attendance, r.spotify, r.created_at
+            `SELECT g.name AS guest_name, gp.group_name, gp.id, r.rsvp_id, r.attendance, r.spotify, r.created_at, r.updated_at
             FROM guests AS g
             JOIN groups AS gp ON g.group_id = gp.id
             JOIN rsvps AS r ON g.guest_id = r.guest_id
@@ -94,12 +94,13 @@ export const deleteRSVP = async (rsvpId) => {
 
 export const editAttendance = async (rsvpId, attendance) => {
     try {
+        let updateTime = new Date().toISOString();
         const result = await db.query(
             `UPDATE ${tableName}
-            SET attendance = $1
-            WHERE rsvp_id = $2
+            SET attendance = $1, updated_at = $2
+            WHERE rsvp_id = $3
             RETURNING *`,
-            [attendance, rsvpId]
+            [attendance, updateTime, rsvpId]
         )
 
         return result.rows
