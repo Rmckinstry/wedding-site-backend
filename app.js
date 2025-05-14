@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express';
 import routes from './routes/index.js'
 
@@ -10,6 +11,6 @@ app.use(express.json());
 // central router from routes/index.js
 app.use('/', routes);
 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 })
