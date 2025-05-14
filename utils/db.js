@@ -1,5 +1,5 @@
 import pg from 'pg';
-const {Pool} = pg;
+const { Pool } = pg;
 
 // use env later
 const pool = new Pool({
@@ -11,5 +11,6 @@ const pool = new Pool({
 })
 
 export default {
-    query: (text, params) => pool.query(text, params)
+    query: (text, params) => pool.query(text, params),
+    getClient: () => pool.connect()
 };
