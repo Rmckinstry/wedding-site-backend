@@ -7,14 +7,9 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    ssl: true
 })
-// console.log(process.env.DB_URL);
-// const pool = new Pool({
-//     connectionString: process.env.DB_URL,
-//     ssl: process.env.DB_URL ? true : false
-// });
-// console.log(pool);
 
 export default {
     query: (text, params) => pool.query(text, params),
