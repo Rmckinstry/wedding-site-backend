@@ -27,12 +27,28 @@ export const getGuestById = async (req, res) => {
     }
 };
 
-export const getGuestByGroup = async (req, res) => {
+export const getGuestsByGroup = async (req, res) => {
     try {
         const { groupId } = req.params;
-        const result = await db.query(`SELECT * FROM ${tableName} WHERE group_id = $1`, [groupId]);
+        const query = `
+            SELECT 
+                g.*,
+                gr.group_name
+            FROM
+                guests AS g
+            JOIN
+                groups AS gr
+            ON 
+                g.group_id = gr.id
+            WHERE
+                g.group_id = $1
 
-        res.json(result.rows);
+        `
+        const result = await db.query(query, [groupId]);
+
+        const groupName = result.rows.length > 0 ? result.rows[0].group_name : null;
+
+        res.json({ group_name: groupName, guests: result.rows });
     } catch (err) {
         console.error(err);
         res.status(500).send("Internal Server Error");
