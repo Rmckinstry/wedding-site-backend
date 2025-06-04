@@ -2,7 +2,7 @@ import express from "express";
 import {
     getAllGuests,
     getGuestById,
-    getGuestByGroup,
+    getGuestsByGroup,
     createGuest,
     createAdditional,
     editGuest,
@@ -16,7 +16,7 @@ const router = express.Router();
 // GET
 router.get("/", getAllGuests);
 router.get("/:guestId", getGuestById);
-router.get("/group/:groupId", getGuestByGroup);
+router.get("/group/:groupId", getGuestsByGroup);
 
 // POST
 router.post("", createGuest);
