@@ -48,7 +48,10 @@ export const getGuestsByGroup = async (req, res) => {
 
         const groupName = result.rows.length > 0 ? result.rows[0].group_name : null;
 
-        res.json({ group_name: groupName, guests: result.rows });
+        const guests = result.rows.map(({ group_name, ...guest }) => guest);
+
+
+        res.json({ group_name: groupName, guests: guests });
     } catch (err) {
         console.error(err);
         res.status(500).send("Internal Server Error");
