@@ -83,8 +83,18 @@ export const createRSVPHandler = async (req, res) => {
     try {
         const { rsvpList } = req.body;
 
+        //validating input
         if (!Array.isArray(rsvpList) || rsvpList.length === 0) {
             return res.status(400).send("Param must be a non empty array of rsvps");
+        }
+
+        // Validate each RSVP object
+        for (const rsvp of rsvpList) {
+            if (!rsvp.guestId || typeof rsvp.attendance !== 'boolean' || typeof rsvp.spotify !== 'string') {
+                return res.status(400).json({
+                    error: "Each RSVP must have a valid guestId, attendance (boolean), and spotify (string)",
+                });
+            }
         }
 
         const rsvps = await createRSVPs(rsvpList);
@@ -94,8 +104,20 @@ export const createRSVPHandler = async (req, res) => {
             data: rsvps,
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+        console.error("Error in createRSVPHandler:", error.message);
+
+        // Handle specific error cases
+        if (error.message.includes("Group already has existing RSVPs") ||
+            error.message.includes("Group has already submitted RSVP")) {
+            return res.status(409).json({
+                error: error.message,
+            });
+        }
+
+        // Generic error
+        return res.status(500).json({
+            error: "Internal Server Error",
+        });
     }
 }
 

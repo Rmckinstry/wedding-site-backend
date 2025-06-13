@@ -51,6 +51,22 @@ export const createRSVPs = async (rsvpList) => {
         const client = await db.getClient();
         try {
             await client.query('BEGIN');
+
+            // Extract guest IDs from rsvpList
+            const guestIds = rsvpList.map(rsvp => rsvp.guestId);
+            const groupCheck = await client.query(
+                `SELECT DISTINCT g.group_id
+                 FROM guests g
+                 JOIN rsvps r ON g.guest_id = r.guest_id
+                 WHERE g.guest_id = ANY($1)`,
+                [guestIds]
+            );
+
+            if (groupCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                throw new Error('Cannot create RSVPs: Group already has existing RSVPs');
+            }
+
             const createdRSVPs = [];
 
             for (const rsvp of rsvpList) {
@@ -71,6 +87,9 @@ export const createRSVPs = async (rsvpList) => {
 
         } catch (error) {
             await client.query('ROLLBACK');
+            if (error.code === '23505') { // PostgreSQL unique violation error code
+                throw new Error('Cannot create RSVP: Group has already submitted RSVP.');
+            }
             console.error("Failed to create RSVPs - rolling back transaction:", error);
             throw new Error(`Failed to create RSVPs: ${error.message}`);
         } finally {
