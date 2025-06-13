@@ -68,7 +68,6 @@ export const createRSVPs = async (rsvpList) => {
             }
 
             const createdRSVPs = [];
-
             for (const rsvp of rsvpList) {
                 const { guestId, attendance, spotify } = rsvp;
                 const timestamp = new Date().toISOString();
@@ -87,17 +86,15 @@ export const createRSVPs = async (rsvpList) => {
 
         } catch (error) {
             await client.query('ROLLBACK');
-            if (error.code === '23505') { // PostgreSQL unique violation error code
-                throw new Error('Cannot create RSVP: Group has already submitted RSVP.');
-            }
+
             console.error("Failed to create RSVPs - rolling back transaction:", error);
-            throw new Error(`Failed to create RSVPs: ${error.message}`);
+            throw error;
         } finally {
             client.release();
         }
     } catch (error) {
         console.error("Error processing RSVPs:", error);
-        res.status(500).send('Internal Server Error');
+        throw error;
     }
 }
 
