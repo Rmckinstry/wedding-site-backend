@@ -34,12 +34,13 @@ export const getGuestRSVP = async (guestId) => {
 export const getGroupRSVPs = async (groupId) => {
     try {
         const result = await db.query(
-            `SELECT g.name AS guest_name, gp.group_name, gp.id, r.rsvp_id, r.attendance, r.spotify, r.created_at, r.updated_at
+            `SELECT g.guest_id, r.rsvp_id, r.attendance, r.spotify, r.created_at, r.updated_at
             FROM guests AS g
             JOIN groups AS gp ON g.group_id = gp.id
             JOIN rsvps AS r ON g.guest_id = r.guest_id
             WHERE gp.id = $1`
             , [groupId])
+        console.log(result)
         return result.rows
     } catch (error) {
         throw new Error(`Failed to fetch group RSVPs: ${error.message}`)
