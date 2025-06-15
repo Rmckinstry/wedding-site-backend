@@ -79,33 +79,6 @@ export const createGuest = async (req, res) => {
     }
 };
 
-export const createAdditional = async (req, res) => {
-    try {
-        const { name, email, plusOneAllowed, hasDependents, groupId, primaryGuestId, guestType } = req.body;
-
-        if (guestType !== "dependent" || "plus_one") {
-            console.error("Invalid guest type");
-            res.status(400).send(`Bad Request. Invalid guest type: ${guestType}. Must be dependent, or plus_one.`);
-            return
-        }
-
-        const result = await db.query(
-            `INSERT INTO ${tableName} (name, email, plus_one_allowed, has_dependents, group_id, added_by_guest_id, additional_guest_type) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) 
-            RETURNING *`,
-            [name, email, plusOneAllowed, hasDependents, groupId, primaryGuestId, guestType]
-        );
-        res.status(201).json({
-            message: "Additional guest inserted successfully",
-            data: result.rows,
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
-    }
-}
-
 // PUT
 export const editGuest = async (req, res) => {
     try {

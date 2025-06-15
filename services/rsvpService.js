@@ -100,9 +100,29 @@ export const createRSVPs = async (rsvpList) => {
 }
 
 export const createRSVPAdditonal = async (additonalName, guestId, groupId, additonalType) => {
+    let client;
     try {
-        const client = await db.getClient();
+        client = await db.getClient();
         await client.query("BEGIN");
+
+        //check if primary guest flags
+        const primaryGuestFlags = await client.query(
+            `SELECT plus_one_allowed, has_dependents FROM guests WHERE guest_id = $1`,
+            [guestId]
+        )
+
+        const plusOneAllowed = primaryGuestFlags.rows[0]["plus_one_allowed"];
+        const dependentsAllowed = primaryGuestFlags.rows[0]["has_dependents"];
+
+        // Cancel transaction if flag for matching additonalType is false
+        if (additonalType === "plus_one" && !plusOneAllowed) {
+            await client.query('ROLLBACK');
+            throw new Error("Plus one not allowed for this guest");
+        }
+        if (additonalType === "dependent" && !dependentsAllowed) {
+            await client.query('ROLLBACK');
+            throw new Error("Dependents not allowed for this guest");
+        }
 
         // create Guest record for additonal guest
         const newGuest = await db.query(
@@ -123,7 +143,7 @@ export const createRSVPAdditonal = async (additonalName, guestId, groupId, addit
         );
 
         //use primary guest id and switch plus one to false if applicable
-        if (additonalType === "plus_one") {
+        if (additonalType === "plus_one" && plusOneAllowed) {
             const result = await db.query(
                 `UPDATE guests
                 SET plus_one_allowed = $1
@@ -135,11 +155,13 @@ export const createRSVPAdditonal = async (additonalName, guestId, groupId, addit
 
         await client.query('COMMIT');
 
-        return { guestInfo: newGuest, rsvpInfo: newAdditonalRSVP }
+        return { guestInfo: newGuest.rows, rsvpInfo: newAdditonalRSVP.rows[0] }
     } catch (error) {
-        await client.query('ROLLBACK');
+        if (client) await client.query('ROLLBACK');
         console.error("Error creating additonal guest & RSVPs:", error);
         throw error;
+    } finally {
+        if (client) client.release;
     }
 }
 

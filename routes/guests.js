@@ -4,7 +4,6 @@ import {
     getGuestById,
     getGuestsByGroup,
     createGuest,
-    createAdditional,
     editGuest,
     editHasDependent,
     editPlusOneAllowed,
@@ -20,7 +19,6 @@ router.get("/group/:groupId", getGuestsByGroup);
 
 // POST
 router.post("", createGuest);
-router.post("/additional", createAdditional);
 
 // PUT
 router.put("/:guestId", editGuest);

@@ -125,7 +125,6 @@ export const createRSVPHandler = async (req, res) => {
 export const createAdditonalHandler = async (req, res) => {
     try {
         const { additonalName, guestId, groupId, additonalType } = req.body;
-        console.log(additonalName, additonalType, guestId, groupId)
 
         if (!additonalName || typeof additonalName !== "string") {
             return res.status(400).send("additonalName must be a non empty string")
@@ -150,6 +149,12 @@ export const createAdditonalHandler = async (req, res) => {
             data: additonalGuest,
         });
     } catch (error) {
+        if (error.message === "Plus one not allowed for this guest" ||
+            error.message === "Dependents not allowed for this guest") {
+            return res.status(403).json({
+                error: error.message
+            });
+        }
         return res.status(500).json({
             error: "Internal Server Error",
         });
