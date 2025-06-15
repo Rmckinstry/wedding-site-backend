@@ -5,7 +5,8 @@ import {
     deleteRSVP,
     getGuestRSVP,
     getGroupRSVPs,
-    editAttendance
+    editAttendance,
+    createRSVPAdditonal
 } from '../services/rsvpService.js';
 import { isNumber } from '../utils/utils.js'
 
@@ -115,6 +116,40 @@ export const createRSVPHandler = async (req, res) => {
         }
 
         // Generic error
+        return res.status(500).json({
+            error: "Internal Server Error",
+        });
+    }
+}
+
+export const createAdditonalHandler = async (req, res) => {
+    try {
+        const { additonalName, guestId, groupId, additonalType } = req.body;
+        console.log(additonalName, additonalType, guestId, groupId)
+
+        if (!additonalName || typeof additonalName !== "string") {
+            return res.status(400).send("additonalName must be a non empty string")
+        }
+
+        if (!guestId || typeof guestId !== "number") {
+            return res.status(400).send("guestId must be a valid integer number")
+        }
+
+        if (!groupId || typeof groupId !== "number") {
+            return res.status(400).send("groupId must be a valid integer")
+        }
+
+        if (!additonalType || typeof additonalType !== "string") {
+            return res.status(400).send("additonalName must be a string with a value of plus_one or dependent")
+        }
+
+        const additonalGuest = await createRSVPAdditonal(additonalName, guestId, groupId, additonalType);
+
+        res.status(201).json({
+            message: "Additonal Guest created successfully & RSVP submitted",
+            data: additonalGuest,
+        });
+    } catch (error) {
         return res.status(500).json({
             error: "Internal Server Error",
         });

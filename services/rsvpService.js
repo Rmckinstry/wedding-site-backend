@@ -99,6 +99,50 @@ export const createRSVPs = async (rsvpList) => {
     }
 }
 
+export const createRSVPAdditonal = async (additonalName, guestId, groupId, additonalType) => {
+    try {
+        const client = await db.getClient();
+        await client.query("BEGIN");
+
+        // create Guest record for additonal guest
+        const newGuest = await db.query(
+            `INSERT INTO guests (name, email, plus_one_allowed, has_dependents, group_id, added_by_guest_id, additional_guest_type, song_requests) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+            RETURNING *`,
+            [additonalName, null, false, false, groupId, guestId, additonalType, 0]
+        );
+        const newGuestId = newGuest.rows[0].guest_id;
+
+        //create rsvp with new guest id
+        const timestamp = new Date().toISOString();
+        const newAdditonalRSVP = await client.query(
+            `INSERT INTO ${tableName} (guest_id, attendance, spotify, created_at)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *`,
+            [newGuestId, true, "", timestamp]
+        );
+
+        //use primary guest id and switch plus one to false if applicable
+        if (additonalType === "plus_one") {
+            const result = await db.query(
+                `UPDATE guests
+                SET plus_one_allowed = $1
+                WHERE guest_id = $2
+                RETURNING *`,
+                [false, guestId]
+            );
+        }
+
+        await client.query('COMMIT');
+
+        return { guestInfo: newGuest, rsvpInfo: newAdditonalRSVP }
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Error creating additonal guest & RSVPs:", error);
+        throw error;
+    }
+}
+
 export const deleteRSVP = async (rsvpId) => {
     try {
         const result = await db.query(`DELETE FROM ${tableName} WHERE rsvp_id = $1`, [rsvpId]);
