@@ -124,7 +124,7 @@ export const createRSVPHandler = async (req, res) => {
 
 export const createAdditonalHandler = async (req, res) => {
     try {
-        const { additionalName, guestId, groupId, additionalType } = req.body;
+        const { additionalName, guestId, groupId, additionalType } = req.body["postData"];
 
         if (!additionalName || typeof additionalName !== "string") {
             return res.status(400).send("additionalName must be a non empty string")
