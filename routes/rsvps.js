@@ -18,7 +18,7 @@ router.get('/guest/:guestId', getGuestRSVPHandler);
 router.get('/group/:groupId', getGroupRSVPHandler);
 // POST
 router.post('/', createRSVPHandler);
-router.post('/additonal', createAdditonalHandler)
+router.post('/additional', createAdditonalHandler)
 // PUT
 router.patch('/attendance/:rsvpId', editAttendanceHandler);
 

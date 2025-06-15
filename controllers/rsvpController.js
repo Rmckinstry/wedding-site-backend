@@ -124,10 +124,10 @@ export const createRSVPHandler = async (req, res) => {
 
 export const createAdditonalHandler = async (req, res) => {
     try {
-        const { additonalName, guestId, groupId, additonalType } = req.body;
+        const { additionalName, guestId, groupId, additionalType } = req.body;
 
-        if (!additonalName || typeof additonalName !== "string") {
-            return res.status(400).send("additonalName must be a non empty string")
+        if (!additionalName || typeof additionalName !== "string") {
+            return res.status(400).send("additionalName must be a non empty string")
         }
 
         if (!guestId || typeof guestId !== "number") {
@@ -138,15 +138,15 @@ export const createAdditonalHandler = async (req, res) => {
             return res.status(400).send("groupId must be a valid integer")
         }
 
-        if (!additonalType || typeof additonalType !== "string") {
-            return res.status(400).send("additonalName must be a string with a value of plus_one or dependent")
+        if (!additionalType || typeof additionalType !== "string") {
+            return res.status(400).send("additionalName must be a string with a value of plus_one or dependent")
         }
 
-        const additonalGuest = await createRSVPAdditonal(additonalName, guestId, groupId, additonalType);
+        const additionalGuest = await createRSVPAdditonal(additionalName, guestId, groupId, additionalType);
 
         res.status(201).json({
             message: "Additonal Guest created successfully & RSVP submitted",
-            data: additonalGuest,
+            data: additionalGuest,
         });
     } catch (error) {
         if (error.message === "Plus one not allowed for this guest" ||
