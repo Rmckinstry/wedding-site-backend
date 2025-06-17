@@ -61,13 +61,13 @@ export const getGuestsByGroup = async (req, res) => {
 // POST
 export const createGuest = async (req, res) => {
     try {
-        const { name, email, plusOneAllowed, hasDependents, groupId } = req.body;
+        const { name, email, plusOneAllowed, hasDependents, groupId, songRequests } = req.body;
 
         const result = await db.query(
-            `INSERT INTO ${tableName} (name, email, plus_one_allowed, has_dependents, group_id) 
-            VALUES ($1, $2, $3, $4, $5) 
+            `INSERT INTO ${tableName} (name, email, plus_one_allowed, has_dependents, group_id, song_requests) 
+            VALUES ($1, $2, $3, $4, $5, $6) 
             RETURNING *`,
-            [name, email, plusOneAllowed, hasDependents, groupId]
+            [name, email, plusOneAllowed, hasDependents, groupId, songRequests]
         );
         res.status(201).json({
             message: "Guest inserted successfully",
@@ -83,14 +83,14 @@ export const createGuest = async (req, res) => {
 export const editGuest = async (req, res) => {
     try {
         const { guestId } = req.params;
-        const { name, email, plusOneAllowed, hasDependents, groupId } = req.body;
+        const { name, email, plusOneAllowed, hasDependents, groupId, addedByGuestId, additionalGuestType, songRequests } = req.body;
 
         const result = await db.query(
             `UPDATE ${tableName} 
-            SET name = $1, email = $2, plus_one_allowed = $3, has_dependents = $4, group_id = $5 
+            SET name = $1, email = $2, plus_one_allowed = $3, has_dependents = $4, group_id = $5, added_by_guest_id = $6, additional_guest_type = $7, song_requests = $8 
             WHERE guest_id = $6 
             RETURNING *`,
-            [name, email, plusOneAllowed, hasDependents, groupId, guestId]
+            [name, email, plusOneAllowed, hasDependents, groupId, guestId, addedByGuestId, additionalGuestType, songRequests]
         );
 
         if (result.rowCount === 0) {
@@ -153,6 +153,30 @@ export const editPlusOneAllowed = async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 };
+
+export const editEmail = async (req, res) => {
+    try {
+        const { guestId } = req.params;
+        const { email } = req.body;
+
+        const result = await db.query(
+            `UPDATE ${tableName}
+            SET email = $1
+            WHERE guest_id = $2
+            RETURNING *`,
+            [email, guestId]
+        );
+
+        res.status(200).json({
+            message: "Email Updated",
+            data: result.rows,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
 
 // DELETE
 export const deleteGuest = async (req, res) => {
