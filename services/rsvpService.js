@@ -40,7 +40,6 @@ export const getGroupRSVPs = async (groupId) => {
             JOIN rsvps AS r ON g.guest_id = r.guest_id
             WHERE gp.id = $1`
             , [groupId])
-        console.log(result)
         return result.rows
     } catch (error) {
         throw new Error(`Failed to fetch group RSVPs: ${error.message}`)
@@ -99,7 +98,7 @@ export const createRSVPs = async (rsvpList) => {
     }
 }
 
-export const createRSVPAdditonal = async (additionalName, guestId, groupId, additionalType) => {
+export const createRSVPAdditonal = async (additionalGuests, guestId, groupId, additionalType) => {
     let client;
     try {
         client = await db.getClient();
@@ -124,38 +123,44 @@ export const createRSVPAdditonal = async (additionalName, guestId, groupId, addi
             throw new Error("Dependents not allowed for this guest");
         }
 
-        // create Guest record for additional guest
-        const newGuest = await db.query(
-            `INSERT INTO guests (name, email, plus_one_allowed, has_dependents, group_id, added_by_guest_id, additional_guest_type, song_requests) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-            RETURNING *`,
-            [additionalName, null, false, false, groupId, guestId, additionalType, 0]
-        );
-        const newGuestId = newGuest.rows[0].guest_id;
+        const createdGuests = [];
+        for (const guest in additionalGuests) {
+            const timestamp = new Date().toISOString();
 
-        //create rsvp with new guest id
-        const timestamp = new Date().toISOString();
-        const newAdditonalRSVP = await client.query(
-            `INSERT INTO ${tableName} (guest_id, attendance, spotify, created_at)
-            VALUES ($1, $2, $3, $4)
-            RETURNING *`,
-            [newGuestId, true, "", timestamp]
-        );
-
-        //use primary guest id and switch plus one to false if applicable
-        if (additionalType === "plus_one" && plusOneAllowed) {
-            const result = await db.query(
-                `UPDATE guests
-                SET plus_one_allowed = $1
-                WHERE guest_id = $2
+            // create Guest record for additional guest
+            const newGuest = await db.query(
+                `INSERT INTO guests (name, email, plus_one_allowed, has_dependents, group_id, added_by_guest_id, additional_guest_type, song_requests) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
                 RETURNING *`,
-                [false, guestId]
+                [additionalGuests[guest], null, false, false, groupId, guestId, additionalType, 1]
             );
+            const newGuestId = newGuest.rows[0].guest_id;
+
+            //create rsvp with new guest id
+            const newAdditonalRSVP = await client.query(
+                `INSERT INTO ${tableName} (guest_id, attendance, spotify, created_at)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *`,
+                [newGuestId, true, "", timestamp]
+            );
+
+            //use primary guest id and switch plus one to false if applicable
+            if (additionalType === "plus_one" && plusOneAllowed) {
+                const result = await db.query(
+                    `UPDATE guests
+                    SET plus_one_allowed = $1
+                    WHERE guest_id = $2
+                    RETURNING *`,
+                    [false, guestId]
+                );
+            }
+
+            createdGuests.push({ guestInfo: newGuest.rows, rsvpInfo: newAdditonalRSVP.rows[0] })
         }
 
         await client.query('COMMIT');
 
-        return { guestInfo: newGuest.rows, rsvpInfo: newAdditonalRSVP.rows[0] }
+        return createdGuests
     } catch (error) {
         if (client) await client.query('ROLLBACK');
         console.error("Error creating additional guest & RSVPs:", error);
