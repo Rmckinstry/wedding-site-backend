@@ -196,3 +196,20 @@ export const editAttendance = async (rsvpId, attendance) => {
         throw new Error(`Failed to edit RSVP attendance: ${error.message}`)
     }
 }
+
+export const editSongs = async (rsvpId, songs) => {
+    try {
+        let updateTime = new Date().toISOString();
+        const result = await db.query(
+            `UPDATE ${tableName}
+            SET spotify = $1, updated_at = $2
+            WHERE rsvp_id = $3
+            RETURNING *`,
+            [songs, updateTime, rsvpId]
+        )
+
+        return result.rows
+    } catch (error) {
+        throw new Error(`Failed to edit RSVP songs: ${error.message}`)
+    }
+}

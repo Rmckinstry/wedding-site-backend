@@ -6,7 +6,8 @@ import {
     getGuestRSVP,
     getGroupRSVPs,
     editAttendance,
-    createRSVPAdditonal
+    createRSVPAdditonal,
+    editSongs
 } from '../services/rsvpService.js';
 import { isNumber } from '../utils/utils.js'
 
@@ -205,5 +206,29 @@ export const editAttendanceHandler = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
+    }
+}
+
+export const editSongsHandler = async (req, res) => {
+    try {
+        const { rsvpId } = req.params;
+        const { songs } = req.body;
+
+        if (rsvpId === "" || !isNumber(rsvpId)) {
+            return res.status(400).send("rsvpId must be a valid integer")
+        }
+
+        if (typeof songs !== "string") {
+            return res.status(400).send("attendance must be type string")
+        }
+
+        const result = await editSongs(rsvpId, songs);
+        res.status(200).json({
+            message: `Songs Updated for RSVP ${rsvpId}`,
+            data: result,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send(`Internal Server Error - Error when updating songs for ${rsvpId}`);
     }
 }
