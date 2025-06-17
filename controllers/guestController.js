@@ -88,9 +88,9 @@ export const editGuest = async (req, res) => {
         const result = await db.query(
             `UPDATE ${tableName} 
             SET name = $1, email = $2, plus_one_allowed = $3, has_dependents = $4, group_id = $5, added_by_guest_id = $6, additional_guest_type = $7, song_requests = $8 
-            WHERE guest_id = $6 
+            WHERE guest_id = $9
             RETURNING *`,
-            [name, email, plusOneAllowed, hasDependents, groupId, guestId, addedByGuestId, additionalGuestType, songRequests]
+            [name, email, plusOneAllowed, hasDependents, groupId, addedByGuestId, additionalGuestType, songRequests, guestId]
         );
 
         if (result.rowCount === 0) {
