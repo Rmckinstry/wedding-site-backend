@@ -1,7 +1,5 @@
-import express from "express";
 import db from "../utils/db.js";
 
-const router = express.Router();
 const tableName = "guests";
 
 // GET
@@ -9,9 +7,9 @@ export const getAllGuests = async (req, res) => {
     try {
         const result = await db.query(`SELECT * FROM ${tableName}`);
         res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -20,10 +18,14 @@ export const getGuestById = async (req, res) => {
         const { guestId } = req.params;
         const result = await db.query(`SELECT * FROM ${tableName} WHERE guest_id = $1`, [guestId]);
 
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+        if (result.rows.length === 0) {
+            return res.status(404).json({ status: 404, message: 'Guest not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -48,13 +50,16 @@ export const getGuestsByGroup = async (req, res) => {
 
         const groupName = result.rows.length > 0 ? result.rows[0].group_name : null;
 
+        if (groupName === null) {
+            return res.status(404).json({ status: 404, message: 'Group not found' });
+        }
+
         const guests = result.rows.map(({ group_name, ...guest }) => guest);
 
-
         res.json({ group_name: groupName, guests: guests });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -63,6 +68,10 @@ export const createGuest = async (req, res) => {
     try {
         const { name, email, plusOneAllowed, hasDependents, groupId, songRequests } = req.body;
 
+        if (!name || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean' || typeof hasDependents !== 'boolean' || !songRequests) {
+            return res.status(400).json({ status: 400, message: "Missing or invalid required guest fields (name, email, groupId, plusOneAllowed, hasDependents, songRequests)" });
+        }
+
         const result = await db.query(
             `INSERT INTO ${tableName} (name, email, plus_one_allowed, has_dependents, group_id, song_requests) 
             VALUES ($1, $2, $3, $4, $5, $6) 
@@ -70,12 +79,13 @@ export const createGuest = async (req, res) => {
             [name, email, plusOneAllowed, hasDependents, groupId, songRequests]
         );
         res.status(201).json({
-            message: "Guest inserted successfully",
-            data: result.rows,
+            status: 201,
+            message: "Guest created successfully",
+            data: result.rows[0],
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -84,6 +94,11 @@ export const editGuest = async (req, res) => {
     try {
         const { guestId } = req.params;
         const { name, email, plusOneAllowed, hasDependents, groupId, addedByGuestId, additionalGuestType, songRequests } = req.body;
+
+        if (!name || !email || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean'
+            || typeof hasDependents !== 'boolean' || !songRequests || addedByGuestId || additionalGuestType) {
+            return res.status(400).json({ status: 400, message: "Missing or invalid required guest fields (name, email, groupId, plusOneAllowed, hasDependents, songRequests, addedByGuestId, additionalGuestType)" });
+        }
 
         const result = await db.query(
             `UPDATE ${tableName} 
@@ -94,16 +109,17 @@ export const editGuest = async (req, res) => {
         );
 
         if (result.rowCount === 0) {
-            return res.status(404).send("Guest not found");
+            return res.status(404).json({ status: 404, message: 'Guest not found' });
         }
 
         res.status(200).json({
+            status: 200,
             message: "Guest updated successfully",
-            data: result.rows,
+            data: result.rows[0],
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -113,6 +129,10 @@ export const editHasDependent = async (req, res) => {
         const { guestId } = req.params;
         const { hasDependents } = req.body;
 
+        if (!hasDependents || typeof hasDependents !== 'boolean') {
+            return res.status(400).json({ status: 400, message: 'hasDepedent flag is required and needs to be a boolean value.' })
+        }
+
         const result = await db.query(
             `UPDATE ${tableName}
             SET has_dependents = $1
@@ -121,13 +141,18 @@ export const editHasDependent = async (req, res) => {
             [hasDependents, guestId]
         );
 
+        if (result.rowCount === 0) {
+            return res.status(404).json({ status: 404, message: "Guest not found" });
+        }
+
         res.status(200).json({
+            status: 200,
             message: "Dependent Flag Updated",
-            data: result.rows,
+            data: result.rows[0],
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -135,6 +160,10 @@ export const editPlusOneAllowed = async (req, res) => {
     try {
         const { guestId } = req.params;
         const { plusOneAllowed } = req.body;
+
+        if (!plusOneAllowed || typeof plusOneAllowed !== 'boolean') {
+            return res.status(400).json({ status: 400, message: 'plusOneAllowed flag is required and needs to be a boolean value.' })
+        }
 
         const result = await db.query(
             `UPDATE ${tableName}
@@ -144,13 +173,18 @@ export const editPlusOneAllowed = async (req, res) => {
             [plusOneAllowed, guestId]
         );
 
+        if (result.rowCount === 0) {
+            return res.status(404).json({ status: 404, message: "Guest not found" });
+        }
+
         res.status(200).json({
+            status: 200,
             message: "Plus One Allowed Flag Updated",
-            data: result.rows,
+            data: result.rows[0],
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
     }
 };
 
@@ -158,6 +192,10 @@ export const editEmail = async (req, res) => {
     try {
         const { guestId } = req.params;
         const { email } = req.body;
+
+        if (!email || typeof email !== 'string' || !email.includes('@')) {
+            return res.status(400).json({ status: 400, message: "Invalid email provided" });
+        }
 
         const result = await db.query(
             `UPDATE ${tableName}
@@ -167,13 +205,19 @@ export const editEmail = async (req, res) => {
             [email, guestId]
         );
 
+        if (result.rowCount === 0) {
+            return res.status(404).json({ status: 404, message: "Guest not found" });
+        }
+
         res.status(200).json({
+            status: 200,
             message: "Email Updated",
-            data: result.rows,
+            data: result.rows[0],
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
+
     }
 };
 
@@ -186,13 +230,14 @@ export const deleteGuest = async (req, res) => {
         const result = await db.query(`DELETE FROM ${tableName} WHERE guest_id = $1`, [guestId]);
 
         if (result.rowCount === 0) {
-            return res.status(404).send('Record not found');
+            return res.status(404).json({ status: 404, message: 'Guest not found' });
         }
 
-        res.status(200).send('Guest deleted successfully');
+        res.status(200).json({ status: 200, message: `Guest ${guestId} deleted successfully` });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Internal Server Error');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
+
     }
 }
