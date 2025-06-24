@@ -1,7 +1,5 @@
-import express from 'express';
 import db from '../utils/db.js';
 
-const router = express.Router();
 const tableName = "groups";
 
 export const getAllGroups = async (req, res) => {
@@ -39,7 +37,7 @@ export const addGroup = async (req, res) => {
             return res.status(400).json({ status: 400, message: "Group name is required" });
         }
 
-        const result = await db.query(`INSERT INTO ${tableName} (group_name) VALUES ($1)`, [name]);
+        const result = await db.query(`INSERT INTO ${tableName} (group_name) VALUES ($1) RETURNING *`, [name]);
 
         res.status(201).json({ status: 201, message: "Group created successfully", data: result.rows[0] });
     } catch (error) {
@@ -58,7 +56,7 @@ export const editGroupName = async (req, res) => {
             return res.status(400).json({ status: 400, message: 'Name is required' })
         }
 
-        const result = await db.query(`UPDATE ${tableName} SET group_name = $2 WHERE id = $1`, [id, name]);
+        const result = await db.query(`UPDATE ${tableName} SET group_name = $2 WHERE id = $1 RETURNING *`, [id, name]);
 
         // Check if any row was updated
         if (result.rowCount === 0) {
@@ -87,7 +85,7 @@ export const deleteGroup = async (req, res) => {
             return res.status(404).json({ status: 404, message: 'Group not found' });
         }
 
-        res.status(200).json({ status: 200, message: 'Group deleted successfully' });
+        res.status(200).json({ status: 200, message: `Group ${id} deleted successfully` });
 
     } catch (error) {
         console.error(error);
