@@ -1,4 +1,5 @@
 import db from '../utils/db.js';
+import { isNumber } from '../utils/utils.js';
 
 const tableName = "groups";
 
@@ -15,6 +16,10 @@ export const getAllGroups = async (req, res) => {
 export const getGroup = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!isNumber(id)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
+
         const result = await db.query(`SELECT (group_name) FROM ${tableName} WHERE id = $1`, [id]);
 
         if (result.rows.length === 0) {
@@ -33,8 +38,8 @@ export const addGroup = async (req, res) => {
         // Extract data from the request body
         const { name } = req.body;
 
-        if (!name) {
-            return res.status(400).json({ status: 400, message: "Group name is required" });
+        if (!name || typeof name !== 'string') {
+            return res.status(400).json({ status: 400, message: "Group name is required and must be a string" });
         }
 
         const result = await db.query(`INSERT INTO ${tableName} (group_name) VALUES ($1) RETURNING *`, [name]);
@@ -51,9 +56,12 @@ export const editGroupName = async (req, res) => {
         const { id } = req.params;
         const { name } = req.body;
 
-        // Ensure `name` is provided in the request body
-        if (!name) {
-            return res.status(400).json({ status: 400, message: 'Name is required' })
+        if (!isNumber(id)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
+
+        if (!name || typeof name !== 'string') {
+            return res.status(400).json({ status: 400, message: "Group name is required and must be a string" });
         }
 
         const result = await db.query(`UPDATE ${tableName} SET group_name = $2 WHERE id = $1 RETURNING *`, [id, name]);
@@ -77,6 +85,10 @@ export const editGroupName = async (req, res) => {
 export const deleteGroup = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (!isNumber(id)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
 
         const result = await db.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
 

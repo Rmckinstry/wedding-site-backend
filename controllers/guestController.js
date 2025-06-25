@@ -1,4 +1,5 @@
 import db from "../utils/db.js";
+import { isNumber } from "../utils/utils.js";
 
 const tableName = "guests";
 
@@ -16,6 +17,10 @@ export const getAllGuests = async (req, res) => {
 export const getGuestById = async (req, res) => {
     try {
         const { guestId } = req.params;
+
+        if (!isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
         const result = await db.query(`SELECT * FROM ${tableName} WHERE guest_id = $1`, [guestId]);
 
         if (result.rows.length === 0) {
@@ -32,6 +37,11 @@ export const getGuestById = async (req, res) => {
 export const getGuestsByGroup = async (req, res) => {
     try {
         const { groupId } = req.params;
+
+        if (!isNumber(groupId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
+
         const query = `
             SELECT 
                 g.*,
@@ -93,6 +103,11 @@ export const createGuest = async (req, res) => {
 export const editGuest = async (req, res) => {
     try {
         const { guestId } = req.params;
+
+        if (!isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
+
         const { name, email, plusOneAllowed, hasDependents, groupId, addedByGuestId, additionalGuestType, songRequests } = req.body;
 
         if (!name || !email || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean'
@@ -129,8 +144,12 @@ export const editHasDependent = async (req, res) => {
         const { guestId } = req.params;
         const { hasDependents } = req.body;
 
-        if (!hasDependents || typeof hasDependents !== 'boolean') {
-            return res.status(400).json({ status: 400, message: 'hasDepedent flag is required and needs to be a boolean value.' })
+        if (!isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
+
+        if (typeof hasDependents !== 'boolean') {
+            return res.status(400).json({ status: 400, message: 'hasDepedents flag is required and needs to be a boolean value.' })
         }
 
         const result = await db.query(
@@ -161,7 +180,11 @@ export const editPlusOneAllowed = async (req, res) => {
         const { guestId } = req.params;
         const { plusOneAllowed } = req.body;
 
-        if (!plusOneAllowed || typeof plusOneAllowed !== 'boolean') {
+        if (!isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
+
+        if (typeof plusOneAllowed !== 'boolean') {
             return res.status(400).json({ status: 400, message: 'plusOneAllowed flag is required and needs to be a boolean value.' })
         }
 
@@ -192,6 +215,10 @@ export const editEmail = async (req, res) => {
     try {
         const { guestId } = req.params;
         const { email } = req.body;
+
+        if (!isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
 
         if (!email || typeof email !== 'string' || !email.includes('@')) {
             return res.status(400).json({ status: 400, message: "Invalid email provided" });
@@ -226,6 +253,10 @@ export const editEmail = async (req, res) => {
 export const deleteGuest = async (req, res) => {
     try {
         const { guestId } = req.params;
+
+        if (!isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
+        }
 
         const result = await db.query(`DELETE FROM ${tableName} WHERE guest_id = $1`, [guestId]);
 

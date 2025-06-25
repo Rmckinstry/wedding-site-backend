@@ -51,7 +51,7 @@ export const getGuestRSVPHandler = async (req, res) => {
         const result = await getGuestRSVP(guestId);
 
         if (!result) {
-            return res.status(404).json({ json: 404, message: `RSVP for guestid ${guestId}not found` });
+            return res.status(404).json({ json: 404, message: `RSVP for guestid ${guestId} not found` });
         }
 
         res.json(result);
@@ -70,9 +70,10 @@ export const getGroupRSVPHandler = async (req, res) => {
 
         const result = await getGroupRSVPs(groupId);
 
-        if (!result) {
-            return res.status(404).json({ status: 404, message: `RSVP for guestid ${guestId}not found` });
+        if (result.length === 0) {
+            return res.status(404).json({ status: 404, message: `No RSVPs for group ${groupId} found.` });
         }
+
         res.json(result);
 
     } catch (error) {
