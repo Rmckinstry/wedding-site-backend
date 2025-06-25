@@ -7,6 +7,7 @@ export const getAllRSVPs = async () => {
         const result = await db.query(`SELECT * FROM ${tableName}`);
         return result.rows
     } catch (error) {
+        console.error("Error at getAllRSVPs", error);
         throw new Error(`Failed to fetch RSVPs: ${error.message}`)
     }
 }
@@ -17,6 +18,7 @@ export const getRSVP = async (rsvpId) => {
         return result.rows[0];
 
     } catch (error) {
+        console.error("Error at getRSVP", error);
         throw new Error(`Failed to fetch RSVP: ${error.message}`)
     }
 }
@@ -27,6 +29,7 @@ export const getGuestRSVP = async (guestId) => {
         return result.rows[0];
 
     } catch (error) {
+        console.error("Error at getGuestRSVP", error);
         throw new Error(`Failed to fetch guest RSVP: ${error.message}`)
     }
 }
@@ -42,59 +45,55 @@ export const getGroupRSVPs = async (groupId) => {
             , [groupId])
         return result.rows
     } catch (error) {
+        console.error("Error at getGroupRSVPs", error);
         throw new Error(`Failed to fetch group RSVPs: ${error.message}`)
     }
 }
 
 export const createRSVPs = async (rsvpList) => {
+    const client = await db.getClient();
     try {
-        const client = await db.getClient();
-        try {
-            await client.query('BEGIN');
+        await client.query('BEGIN');
 
-            // Extract guest IDs from rsvpList
-            const guestIds = rsvpList.map(rsvp => rsvp.guestId);
-            const groupCheck = await client.query(
-                `SELECT DISTINCT g.group_id
+        // Checking if any guest has an rsvp
+        const guestIds = rsvpList.map(rsvp => rsvp.guestId);
+        const groupCheck = await client.query(
+            `SELECT DISTINCT g.group_id
                  FROM guests g
                  JOIN rsvps r ON g.guest_id = r.guest_id
                  WHERE g.guest_id = ANY($1)`,
-                [guestIds]
-            );
+            [guestIds]
+        );
 
-            if (groupCheck.rows.length > 0) {
-                await client.query('ROLLBACK');
-                throw new Error('Cannot create RSVPs: Group already has existing RSVPs');
-            }
+        if (groupCheck.rows.length > 0) {
+            await client.query('ROLLBACK');
+            throw new Error('Cannot create RSVPs: Group already has existing RSVPs');
+        }
 
-            const createdRSVPs = [];
-            for (const rsvp of rsvpList) {
-                const { guestId, attendance, spotify } = rsvp;
-                const timestamp = new Date().toISOString();
+        const createdRSVPs = [];
+        for (const rsvp of rsvpList) {
+            const { guestId, attendance, spotify } = rsvp;
+            const timestamp = new Date().toISOString();
 
-                const result = await client.query(
-                    `INSERT INTO ${tableName} (guest_id, attendance, spotify, created_at)
+            const result = await client.query(
+                `INSERT INTO ${tableName} (guest_id, attendance, spotify, created_at)
                     VALUES ($1, $2, $3, $4)
                     RETURNING *`,
-                    [guestId, attendance, spotify, timestamp]
-                );
-                createdRSVPs.push(result.rows[0]);
-            }
-
-            await client.query('COMMIT');
-            return createdRSVPs;
-
-        } catch (error) {
-            await client.query('ROLLBACK');
-
-            console.error("Failed to create RSVPs - rolling back transaction:", error);
-            throw error;
-        } finally {
-            client.release();
+                [guestId, attendance, spotify, timestamp]
+            );
+            createdRSVPs.push(result.rows[0]);
         }
+
+        await client.query('COMMIT');
+        return createdRSVPs;
+
     } catch (error) {
-        console.error("Error processing RSVPs:", error);
+        await client.query('ROLLBACK');
+
+        console.error("Failed to create RSVPs - rolling back transaction:", error);
         throw error;
+    } finally {
+        client.release();
     }
 }
 
@@ -176,6 +175,7 @@ export const deleteRSVP = async (rsvpId) => {
         return result;
 
     } catch (error) {
+        console.error("Error at deleteRSVP", error);
         throw new Error(`Failed to delete RSVP: ${error.message}`)
     }
 }
@@ -193,6 +193,7 @@ export const editAttendance = async (rsvpId, attendance) => {
 
         return result.rows
     } catch (error) {
+        console.error("Error at deleteRSVP", error);
         throw new Error(`Failed to edit RSVP attendance: ${error.message}`)
     }
 }
@@ -210,6 +211,7 @@ export const editSongs = async (rsvpId, songs) => {
 
         return result.rows
     } catch (error) {
+        console.error("Error at deleteRSVP", error);
         throw new Error(`Failed to edit RSVP songs: ${error.message}`)
     }
 }

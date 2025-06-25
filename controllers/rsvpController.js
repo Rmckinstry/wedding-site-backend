@@ -17,7 +17,7 @@ export const getAllRSVPHandler = async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
 }
 
@@ -25,19 +25,19 @@ export const getRSVPHandler = async (req, res) => {
     try {
         const { rsvpId } = req.params;
 
-        if (rsvpId === "" || !isNumber(rsvpId)) {
-            return res.status(400).send("rsvpId must be a valid integer")
+        if (!rsvpId || !isNumber(rsvpId)) {
+            return res.status(400).json({ status: 400, message: "rsvpId must be a valid integer" });
         }
-        const result = await getRSVP(rsvpId);
 
+        const result = await getRSVP(rsvpId);
         if (!result) {
-            return res.status(404).send('RSVP not found');
+            return res.status(404).json({ status: 400, message: 'RSVP not found' });
         }
 
         res.json(result);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
 }
 
@@ -45,39 +45,39 @@ export const getGuestRSVPHandler = async (req, res) => {
     try {
         const { guestId } = req.params;
 
-        if (guestId === "" || !isNumber(guestId)) {
-            return res.status(400).send("guestId must be a valid integer")
+        if (!guestId || !isNumber(guestId)) {
+            return res.status(400).json({ status: 400, message: "guestId must be a valid integer" })
         }
         const result = await getGuestRSVP(guestId);
 
         if (!result) {
-            return res.status(404).send(`RSVP for guestid ${guestId}not found`);
+            return res.status(404).json({ json: 404, message: `RSVP for guestid ${guestId}not found` });
         }
 
         res.json(result);
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
 }
 
 export const getGroupRSVPHandler = async (req, res) => {
     try {
         const { groupId } = req.params;
-        if (groupId === "" || !isNumber(groupId)) {
-            return res.status(400).send("groupId must be a valid integer")
+        if (!groupId || !isNumber(groupId)) {
+            return res.status(400).json({ status: 400, message: "groupId must be a valid integer" })
         }
 
         const result = await getGroupRSVPs(groupId);
 
         if (!result) {
-            return res.status(404).send(`RSVP for guestid ${guestId}not found`);
+            return res.status(404).json({ status: 404, message: `RSVP for guestid ${guestId}not found` });
         }
         res.json(result);
 
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
 }
 
@@ -87,14 +87,14 @@ export const createRSVPHandler = async (req, res) => {
 
         //validating input
         if (!Array.isArray(rsvpList) || rsvpList.length === 0) {
-            return res.status(400).send("Param must be a non empty array of rsvps");
+            return res.status(400).json({ status: 400, message: "Param must be a non empty array of rsvps" });
         }
 
         // Validate each RSVP object
         for (const rsvp of rsvpList) {
             if (!rsvp.guestId || typeof rsvp.attendance !== 'boolean' || typeof rsvp.spotify !== 'string') {
                 return res.status(400).json({
-                    error: "Each RSVP must have a valid guestId, attendance (boolean), and spotify (string)",
+                    status: 400, error: "Each RSVP must have a valid guestId (int), attendance (boolean), and spotify (string)",
                 });
             }
         }
@@ -102,23 +102,25 @@ export const createRSVPHandler = async (req, res) => {
         const rsvps = await createRSVPs(rsvpList);
 
         res.status(201).json({
+            status: 201,
             message: "RSVP(s) inserted successfully",
             data: rsvps,
         });
     } catch (error) {
         console.error("Error in createRSVPHandler:", error.message);
 
-        // Handle specific error cases
-        if (error.message.includes("Group already has existing RSVPs") ||
-            error.message.includes("Group has already submitted RSVP")) {
+        if (error.message.includes("Group already has existing RSVPs")) {
             return res.status(409).json({
+                status: 409,
+                message: "Group has already RSVP'd.",
                 error: error.message,
             });
         }
 
-        // Generic error
         return res.status(500).json({
-            error: "Internal Server Error",
+            status: 500,
+            message: "There was an error when creating the RSVPs for the group.",
+            error: error.message,
         });
     }
 }
@@ -129,35 +131,46 @@ export const createAdditonalHandler = async (req, res) => {
 
         //validating input
         if (!Array.isArray(additionalGuests) || additionalGuests.length === 0) {
-            return res.status(400).send("additionalGuests must be a non empty array of names");
+            return res.status(400).json({ status: 400, message: "additionalGuests must be an array of names" });
         }
 
         if (!guestId || typeof guestId !== "number") {
-            return res.status(400).send("guestId must be a valid integer number")
+            return res.status(400).json({ status: 400, message: "guestId must be a valid integer number" })
         }
 
         if (!groupId || typeof groupId !== "number") {
-            return res.status(400).send("groupId must be a valid integer")
+            return res.status(400).json({ status: 400, message: "groupId must be a valid integer" })
         }
 
-        if (!additionalType || typeof additionalType !== "string") {
-            return res.status(400).send("additionalName must be a string with a value of plus_one or dependent")
+        if (!additionalType || typeof additionalType !== "string"
+            || (additionalType !== 'plus_one' && additionalType !== 'dependent')) {
+            return res.status(400).json({ status: 400, message: "additionalName must be a string with a value of plus_one or dependent" })
+        }
+
+        if (additionalType === 'plus_one' && additionalGuests.length > 1) {
+            return res.status(409).json({ status: 409, message: 'Only one plus one allowed.' })
         }
 
         const additionalGuest = await createRSVPAdditonal(additionalGuests, guestId, groupId, additionalType);
 
         res.status(201).json({
+            status: 201,
             message: "Additonal Guest created successfully & RSVP submitted",
             data: additionalGuest,
         });
     } catch (error) {
+        console.error('Error in createAdditonalHandler -', error)
         if (error.message === "Plus one not allowed for this guest" ||
             error.message === "Dependents not allowed for this guest") {
             return res.status(403).json({
-                error: error.message
+                status: 403,
+                message: error.message,
+                error: error.message //is this the best way we can do this? does error arg need to be changed
             });
         }
         return res.status(500).json({
+            status: 500,
+            message: 'There was an error while trying to add your additional guests.',
             error: "Internal Server Error",
         });
     }
@@ -167,21 +180,21 @@ export const deleteRSVPHandler = async (req, res) => {
     try {
         const { rsvpId } = req.params;
 
-        if (rsvpId === "" || !isNumber(rsvpId)) {
-            return res.status(400).send("rsvpId must be a valid integer")
+        if (!rsvpId || !isNumber(rsvpId)) {
+            return res.status(400).json({ status: 400, message: "rsvpId must be a valid integer" })
         }
 
         const result = await deleteRSVP(rsvpId);
 
         if (result.rowCount === 0) {
-            return res.status(404).send('Record not found');
+            return res.status(404).json({ status: 404, message: 'RSVP not found' });
         }
 
-        res.status(200).send('RSVP deleted successfully');
+        res.status(200).json({ status: 200, message: `RSVP ${rsvpId} deleted successfully` });
 
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ status: 500, message: 'There was an error while atttempting to delete the RSVP', error: error.message });
     }
 }
 
@@ -190,22 +203,28 @@ export const editAttendanceHandler = async (req, res) => {
         const { rsvpId } = req.params;
         const { attendance } = req.body;
 
-        if (rsvpId === "" || !isNumber(rsvpId)) {
-            return res.status(400).send("rsvpId must be a valid integer")
+        if (!rsvpId || !isNumber(rsvpId)) {
+            return res.status(400).json({ status: 400, message: "rsvpId must be a valid integer" })
         }
 
         if (typeof attendance !== "boolean") {
-            return res.status(400).send("attendance must be type boolean")
+            return res.status(400).json({ json: 400, message: "attendance must be type boolean" })
         }
 
         const result = await editAttendance(rsvpId, attendance);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ status: 404, message: 'RSVP not found' });
+        }
+
         res.status(200).json({
+            status: 200,
             message: "Attendance Updated",
             data: result,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
     }
 }
 
@@ -214,21 +233,27 @@ export const editSongsHandler = async (req, res) => {
         const { rsvpId } = req.params;
         const { songs } = req.body;
 
-        if (rsvpId === "" || !isNumber(rsvpId)) {
-            return res.status(400).send("rsvpId must be a valid integer")
+        if (!rsvpId || !isNumber(rsvpId)) {
+            return res.status(400).json({ status: 400, message: "rsvpId must be a valid integer" });
         }
 
         if (typeof songs !== "string") {
-            return res.status(400).send("attendance must be type string")
+            return res.status(400).json({ status: 400, message: "songs must be type string" });
         }
 
         const result = await editSongs(rsvpId, songs);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ status: 404, message: 'RSVP not found' });
+        }
+
         res.status(200).json({
+            status: 200,
             message: `Songs Updated for RSVP ${rsvpId}`,
             data: result,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send(`Internal Server Error - Error when updating songs for ${rsvpId}`);
+        res.status(500).json({ status: 500, message: `Internal Server Error - Error when updating songs for ${rsvpId}`, error: error.message });
     }
 }
