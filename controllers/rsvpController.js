@@ -214,7 +214,7 @@ export const editAttendanceHandler = async (req, res) => {
 
         const result = await editAttendance(rsvpId, attendance);
 
-        if (result.rowCount === 0) {
+        if (result.length === 0) {
             return res.status(404).json({ status: 404, message: 'RSVP not found' });
         }
 
@@ -244,7 +244,7 @@ export const editSongsHandler = async (req, res) => {
 
         const result = await editSongs(rsvpId, songs);
 
-        if (result.rowCount === 0) {
+        if (result.length === 0) {
             return res.status(404).json({ status: 404, message: 'RSVP not found' });
         }
 
