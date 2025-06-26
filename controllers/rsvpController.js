@@ -70,15 +70,16 @@ export const getGroupRSVPHandler = async (req, res) => {
 
         const result = await getGroupRSVPs(groupId);
 
-        if (result.length === 0) {
-            return res.status(404).json({ status: 404, message: `No RSVPs for group ${groupId} found.` });
-        }
+        // current version doesn't work because UI depends on the empty array. Maybe change this to see if the group exists?
+        // if (result.length === 0) {
+        //     return res.status(404).json({ status: 404, message: `No RSVPs for group ${groupId} found.` });
+        // }
 
         res.json(result);
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: 500, message: 'Internal Server Error', error: error.message });
+        res.status(500).json({ status: 500, message: 'There was an error pulling up your groups RSVP information. Please try again later.', error: error.message });
     }
 }
 
@@ -104,7 +105,7 @@ export const createRSVPHandler = async (req, res) => {
 
         res.status(201).json({
             status: 201,
-            message: "RSVP(s) inserted successfully",
+            message: "RSVP(s) created successfully.",
             data: rsvps,
         });
     } catch (error) {
@@ -120,7 +121,7 @@ export const createRSVPHandler = async (req, res) => {
 
         return res.status(500).json({
             status: 500,
-            message: "There was an error when creating the RSVPs for the group.",
+            message: "There was an error while creating the RSVPs for the group. Please try again.",
             error: error.message,
         });
     }
@@ -241,7 +242,6 @@ export const editSongsHandler = async (req, res) => {
         if (typeof songs !== "string") {
             return res.status(400).json({ status: 400, message: "songs must be type string" });
         }
-
         const result = await editSongs(rsvpId, songs);
 
         if (result.length === 0) {
@@ -255,6 +255,6 @@ export const editSongsHandler = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: 500, message: `Internal Server Error - Error when updating songs for ${rsvpId}`, error: error.message });
+        res.status(500).json({ status: 500, message: `Internal Server Error - Error when updating songs.`, error: error.message });
     }
 }

@@ -10,7 +10,7 @@ export const getAllGuests = async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
+        res.status(500).json({ status: 500, message: "There was an error while loading guests. Please try again later.", error: error.message });
     }
 };
 
@@ -69,7 +69,7 @@ export const getGuestsByGroup = async (req, res) => {
         res.json({ group_name: groupName, guests: guests });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: 500, message: "Internal Server Error", error: error.message });
+        res.status(500).json({ status: 500, message: "There was an error pulling up the group information. Please try again later.", error: error.message });
     }
 };
 
