@@ -220,7 +220,7 @@ export const editEmail = async (req, res) => {
             return res.status(400).json({ status: 400, message: 'id needs to be a valid number.' })
         }
 
-        if (!email || typeof email !== 'string' || !email.includes('@')) {
+        if ((typeof email === 'string' && email !== "") && !email.includes('@')) {
             return res.status(400).json({ status: 400, message: "Invalid email provided" });
         }
 
