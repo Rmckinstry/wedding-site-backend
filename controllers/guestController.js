@@ -78,7 +78,7 @@ export const createGuest = async (req, res) => {
     try {
         const { name, email, plusOneAllowed, hasDependents, groupId, songRequests } = req.body;
 
-        if (!name || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean' || typeof hasDependents !== 'boolean' || !songRequests) {
+        if (!name || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean' || typeof hasDependents !== 'boolean' || isNaN(songRequests)) {
             return res.status(400).json({ status: 400, message: "Missing or invalid required guest fields (name, email, groupId, plusOneAllowed, hasDependents, songRequests)" });
         }
 
@@ -110,9 +110,8 @@ export const editGuest = async (req, res) => {
 
         const { name, email, plusOneAllowed, hasDependents, groupId, addedByGuestId, additionalGuestType, songRequests } = req.body;
 
-        if (!name || !email || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean'
-            || typeof hasDependents !== 'boolean' || !songRequests || addedByGuestId || additionalGuestType) {
-            return res.status(400).json({ status: 400, message: "Missing or invalid required guest fields (name, email, groupId, plusOneAllowed, hasDependents, songRequests, addedByGuestId, additionalGuestType)" });
+        if (!name || groupId === undefined || isNaN(groupId) || typeof plusOneAllowed !== 'boolean' || typeof hasDependents !== 'boolean' || isNaN(songRequests)) {
+            return res.status(400).json({ status: 400, message: "Missing or invalid required guest fields (name, email, groupId, plusOneAllowed, hasDependents, songRequests)" });
         }
 
         const result = await db.query(
