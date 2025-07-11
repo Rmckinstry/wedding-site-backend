@@ -52,7 +52,6 @@ export const getGroupRSVPs = async (groupId) => {
 
 export const createRSVPs = async (rsvpList) => {
     const client = await db.getClient();
-    console.log(rsvpList)
     const { groupId, rsvps, additional } = rsvpList;
 
     try {
