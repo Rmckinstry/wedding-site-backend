@@ -52,6 +52,7 @@ export const getGroupRSVPs = async (groupId) => {
 
 export const createRSVPs = async (rsvpList) => {
     const client = await db.getClient();
+    console.log(rsvpList)
     const { groupId, rsvps, additional } = rsvpList;
 
     try {
@@ -72,7 +73,7 @@ export const createRSVPs = async (rsvpList) => {
             throw new Error('Cannot create RSVPs: Group already has existing RSVPs');
         }
 
-        //looping through rsvps
+        //creating main rsvps
         const createdRSVPs = [];
         for (const rsvp of rsvps) {
             const { guestId, attendance, spotify } = rsvp;
@@ -87,12 +88,16 @@ export const createRSVPs = async (rsvpList) => {
             createdRSVPs.push(result.rows[0]);
         }
 
+        let additionalGuests = [];
+        if (additional.length > 0) {
+            additionalGuests = await createRSVPAdditonal(additional, groupId, client);
+        }
+
         await client.query('COMMIT');
-        return createdRSVPs;
+        return { createdRSVPs, additionalGuests };
 
     } catch (error) {
         await client.query('ROLLBACK');
-
         console.error("Failed to create RSVPs - rolling back transaction:", error);
         throw error;
     } finally {
@@ -100,7 +105,7 @@ export const createRSVPs = async (rsvpList) => {
     }
 }
 
-export const createRSVPAdditonal = async (additional, groupId) => {
+export const createRSVPAdditonal = async (additional, groupId, providedClient = null) => {
     /*
         additional : {
             name : string,
@@ -109,10 +114,11 @@ export const createRSVPAdditonal = async (additional, groupId) => {
         }
     */
 
-    let client;
+    const client = providedClient || await db.getClient();
+    const isOwnClient = !providedClient;
+
     try {
-        client = await db.getClient();
-        await client.query("BEGIN");
+        if (isOwnClient) await client.query("BEGIN");
 
         const createdGuests = [];
 
@@ -124,17 +130,16 @@ export const createRSVPAdditonal = async (additional, groupId) => {
                 [guest.guestId]
             )
 
-
             const plusOneAllowed = primaryGuestFlags.rows[0]["plus_one_allowed"];
             const dependentsAllowed = primaryGuestFlags.rows[0]["has_dependents"];
 
             // Cancel transaction if flag for matching additionalType is false
             if (guest.type === "plus_one" && !plusOneAllowed) {
-                await client.query('ROLLBACK');
+                if (isOwnClient) await client.query('ROLLBACK');
                 throw new Error("Plus one not allowed for this guest");
             }
             if (guest.type === "dependent" && !dependentsAllowed) {
-                await client.query('ROLLBACK');
+                if (isOwnClient) await client.query('ROLLBACK');
                 throw new Error("Dependents not allowed for this guest");
             }
 
@@ -172,15 +177,15 @@ export const createRSVPAdditonal = async (additional, groupId) => {
 
         }
 
-        await client.query('COMMIT');
+        if (isOwnClient) await client.query('COMMIT');
 
         return createdGuests
     } catch (error) {
-        if (client) await client.query('ROLLBACK');
+        if (isOwnClient && client) await client.query('ROLLBACK');
         console.error("Error creating additional guest & RSVPs:", error);
         throw error;
     } finally {
-        if (client) client.release;
+        if (isOwnClient && client) client.release;
     }
 }
 
