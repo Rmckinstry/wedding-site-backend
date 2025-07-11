@@ -52,11 +52,13 @@ export const getGroupRSVPs = async (groupId) => {
 
 export const createRSVPs = async (rsvpList) => {
     const client = await db.getClient();
+    const { groupId, rsvps, additional } = rsvpList;
+
     try {
         await client.query('BEGIN');
 
         // Checking if any guest has an rsvp
-        const guestIds = rsvpList.map(rsvp => rsvp.guestId);
+        const guestIds = rsvps.map(rsvp => rsvp.guestId);
         const groupCheck = await client.query(
             `SELECT DISTINCT g.group_id
                  FROM guests g
@@ -70,8 +72,9 @@ export const createRSVPs = async (rsvpList) => {
             throw new Error('Cannot create RSVPs: Group already has existing RSVPs');
         }
 
+        //looping through rsvps
         const createdRSVPs = [];
-        for (const rsvp of rsvpList) {
+        for (const rsvp of rsvps) {
             const { guestId, attendance, spotify } = rsvp;
             const timestamp = new Date().toISOString();
 
@@ -97,33 +100,44 @@ export const createRSVPs = async (rsvpList) => {
     }
 }
 
-export const createRSVPAdditonal = async (additionalGuests, guestId, groupId, additionalType) => {
+export const createRSVPAdditonal = async (additional, groupId) => {
+    /*
+        additional : {
+            name : string,
+            type : 'plus_one' | 'dependent',
+            guestId : number
+        }
+    */
+
     let client;
     try {
         client = await db.getClient();
         await client.query("BEGIN");
 
-        //check if primary guest flags
-        const primaryGuestFlags = await client.query(
-            `SELECT plus_one_allowed, has_dependents FROM guests WHERE guest_id = $1`,
-            [guestId]
-        )
-
-        const plusOneAllowed = primaryGuestFlags.rows[0]["plus_one_allowed"];
-        const dependentsAllowed = primaryGuestFlags.rows[0]["has_dependents"];
-
-        // Cancel transaction if flag for matching additionalType is false
-        if (additionalType === "plus_one" && !plusOneAllowed) {
-            await client.query('ROLLBACK');
-            throw new Error("Plus one not allowed for this guest");
-        }
-        if (additionalType === "dependent" && !dependentsAllowed) {
-            await client.query('ROLLBACK');
-            throw new Error("Dependents not allowed for this guest");
-        }
-
         const createdGuests = [];
-        for (const guest in additionalGuests) {
+
+        for (const guest of additional) {
+
+            //check if primary guest flags
+            const primaryGuestFlags = await client.query(
+                `SELECT plus_one_allowed, has_dependents FROM guests WHERE guest_id = $1`,
+                [guest.guestId]
+            )
+
+
+            const plusOneAllowed = primaryGuestFlags.rows[0]["plus_one_allowed"];
+            const dependentsAllowed = primaryGuestFlags.rows[0]["has_dependents"];
+
+            // Cancel transaction if flag for matching additionalType is false
+            if (guest.type === "plus_one" && !plusOneAllowed) {
+                await client.query('ROLLBACK');
+                throw new Error("Plus one not allowed for this guest");
+            }
+            if (guest.type === "dependent" && !dependentsAllowed) {
+                await client.query('ROLLBACK');
+                throw new Error("Dependents not allowed for this guest");
+            }
+
             const timestamp = new Date().toISOString();
 
             // create Guest record for additional guest
@@ -131,7 +145,7 @@ export const createRSVPAdditonal = async (additionalGuests, guestId, groupId, ad
                 `INSERT INTO guests (name, email, plus_one_allowed, has_dependents, group_id, added_by_guest_id, additional_guest_type, song_requests) 
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
                 RETURNING *`,
-                [additionalGuests[guest], null, false, false, groupId, guestId, additionalType, 1]
+                [guest.name, null, false, false, groupId, guest.guestId, guest.type, 1]
             );
             const newGuestId = newGuest.rows[0].guest_id;
 
@@ -144,17 +158,18 @@ export const createRSVPAdditonal = async (additionalGuests, guestId, groupId, ad
             );
 
             //use primary guest id and switch plus one to false if applicable
-            if (additionalType === "plus_one" && plusOneAllowed) {
+            if (guest.type === "plus_one" && plusOneAllowed) {
                 const result = await db.query(
                     `UPDATE guests
                     SET plus_one_allowed = $1
                     WHERE guest_id = $2
                     RETURNING *`,
-                    [false, guestId]
+                    [false, guest.guestId]
                 );
             }
 
-            createdGuests.push({ guestInfo: newGuest.rows, rsvpInfo: newAdditonalRSVP.rows[0] })
+            createdGuests.push({ guestInfo: newGuest.rows[0], rsvpInfo: newAdditonalRSVP.rows[0] })
+
         }
 
         await client.query('COMMIT');

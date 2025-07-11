@@ -87,6 +87,7 @@ export const createRSVPHandler = async (req, res) => {
     try {
         const { rsvpList } = req.body;
 
+        /* temp disabling
         //validating input
         if (!Array.isArray(rsvpList) || rsvpList.length === 0) {
             return res.status(400).json({ status: 400, message: "Param must be a non empty array of rsvps" });
@@ -100,6 +101,7 @@ export const createRSVPHandler = async (req, res) => {
                 });
             }
         }
+            */
 
         const rsvps = await createRSVPs(rsvpList);
 
@@ -129,8 +131,9 @@ export const createRSVPHandler = async (req, res) => {
 
 export const createAdditonalHandler = async (req, res) => {
     try {
-        const { additionalGuests, guestId, groupId, additionalType } = req.body["postData"];
+        const { additional, groupId } = req.body["postData"];
 
+        /* temp disabling
         //validating input
         if (!Array.isArray(additionalGuests) || additionalGuests.length === 0) {
             return res.status(400).json({ status: 400, message: "additionalGuests must be an array of names" });
@@ -152,8 +155,9 @@ export const createAdditonalHandler = async (req, res) => {
         if (additionalType === 'plus_one' && additionalGuests.length > 1) {
             return res.status(409).json({ status: 409, message: 'Only one plus one allowed.' })
         }
+        */
 
-        const additionalGuest = await createRSVPAdditonal(additionalGuests, guestId, groupId, additionalType);
+        const additionalGuest = await createRSVPAdditonal(additional, groupId);
 
         res.status(201).json({
             status: 201,
