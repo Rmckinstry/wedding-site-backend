@@ -87,21 +87,22 @@ export const createRSVPHandler = async (req, res) => {
     try {
         const { rsvpList } = req.body;
 
-        /* temp disabling
-        //validating input
-        if (!Array.isArray(rsvpList) || rsvpList.length === 0) {
-            return res.status(400).json({ status: 400, message: "Param must be a non empty array of rsvps" });
+        // validating input
+        if (!rsvpList.groupId || typeof rsvpList.groupId !== 'number') {
+            return res.status(400).json({ status: 400, message: "groupId must be a valid integer" });
         }
 
-        // Validate each RSVP object
-        for (const rsvp of rsvpList) {
+        if (!Array.isArray(rsvpList.rsvps) || rsvpList.rsvps.length === 0) {
+            return res.status(400).json({ status: 400, message: "rsvps must be a non empty array of rsvp objects" });
+        }
+
+        for (const rsvp of rsvpList.rsvps) {
             if (!rsvp.guestId || typeof rsvp.attendance !== 'boolean' || typeof rsvp.spotify !== 'string') {
                 return res.status(400).json({
                     status: 400, error: "Each RSVP must have a valid guestId (int), attendance (boolean), and spotify (string)",
                 });
             }
         }
-            */
 
         const rsvps = await createRSVPs(rsvpList);
 
@@ -133,29 +134,22 @@ export const createAdditonalHandler = async (req, res) => {
     try {
         const { additional, groupId } = req.body["postData"];
 
-        /* temp disabling
         //validating input
-        if (!Array.isArray(additionalGuests) || additionalGuests.length === 0) {
-            return res.status(400).json({ status: 400, message: "additionalGuests must be an array of names" });
-        }
-
-        if (!guestId || typeof guestId !== "number") {
-            return res.status(400).json({ status: 400, message: "guestId must be a valid integer number" })
+        if (!Array.isArray(additional) || additional.length === 0) {
+            return res.status(400).json({ status: 400, message: "additional must be an array of valid guest objects" });
         }
 
         if (!groupId || typeof groupId !== "number") {
             return res.status(400).json({ status: 400, message: "groupId must be a valid integer" })
         }
 
-        if (!additionalType || typeof additionalType !== "string"
-            || (additionalType !== 'plus_one' && additionalType !== 'dependent')) {
-            return res.status(400).json({ status: 400, message: "additionalName must be a string with a value of plus_one or dependent" })
+        for (const ag of additional) {
+            if (typeof ag.guestId !== 'number' || (ag.type !== 'plus_one' && ag.type !== 'dependent') || typeof ag.name !== 'string') {
+                return res.status(400).json({
+                    status: 400, error: "Each additional guest must have a valid guestId (int), name (string), and type (string)",
+                });
+            }
         }
-
-        if (additionalType === 'plus_one' && additionalGuests.length > 1) {
-            return res.status(409).json({ status: 409, message: 'Only one plus one allowed.' })
-        }
-        */
 
         const additionalGuest = await createRSVPAdditonal(additional, groupId);
 
