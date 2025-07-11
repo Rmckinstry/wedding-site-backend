@@ -89,7 +89,7 @@ export const createRSVPs = async (rsvpList) => {
         }
 
         let additionalGuests = [];
-        if (additional.length > 0) {
+        if (additional && additional.length > 0) {
             additionalGuests = await createRSVPAdditonal(additional, groupId, client);
         }
 
@@ -114,6 +114,7 @@ export const createRSVPAdditonal = async (additional, groupId, providedClient = 
         }
     */
 
+    //can handle other methods calling it or it can be treated as a standalone transaction
     const client = providedClient || await db.getClient();
     const isOwnClient = !providedClient;
 
