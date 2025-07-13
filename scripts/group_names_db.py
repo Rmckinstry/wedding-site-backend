@@ -30,14 +30,14 @@ except psycopg2.Error as e:
 cur = conn.cursor()
 
 try:
-    with open('group_names.json', 'r') as f:
+    with open('../guest_data.json', 'r') as f:
         data = json.load(f)
         group_names = data.get('group_names', [])
 except FileNotFoundError:
-    print("Error: 'group_names.json' not found. Please make sure the file is in the same directory as the script.")
+    print("Error: 'guest_data.json' not found. Please make sure the file is in the same directory as the script.")
     group_names = []
 except json.JSONDecodeError:
-    print("Error: Could not decode JSON from 'group_names.json'. Please check the file's format.")
+    print("Error: Could not decode JSON from 'guest_data.json'. Please check the file's format.")
     group_names = []
 
 # Inserting the group names into the table
@@ -49,7 +49,7 @@ if group_names:
     conn.commit()
     print("Data insertion completed successfully.")
 else:
-    print("No group names found to insert. Please check 'group_names.json'.")
+    print("No group names found to insert. Please check 'guest_data.json'.")
 
 
 # Closing the connection

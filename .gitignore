@@ -1,4 +1,4 @@
 # Node.js dependencies
 node_modules/
 .env
-guest-data.json
+guest_data.json
