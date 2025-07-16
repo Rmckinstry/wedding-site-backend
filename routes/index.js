@@ -31,6 +31,27 @@ router.get('/health', async (req, res) => {
     }
 })
 
+// admin login
+// TODO: in the future admin needs to be more fleshed out
+// logging in should generate a token if good creds
+// certain admin routes should require tokens
+router.post('admin/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (username !== process.env.ADMIN_USERNAME || password !== process.env.ADMIN_PASSWORD) {
+        console.error('Admin login failed: Wrong username or password');
+        res.status(500).json({
+            status: 401,
+            message: 'Wrong Username or Password',
+            error: 'Wrong Username or Password',
+        });
+    } else {
+        res.status(200).json({
+            status: 200,
+        });
+    }
+})
+
 // catch-all route for undefined routes if needed
 router.use((req, res, next) => {
     res.status(404).send("Sorry, we couldn't find what you're looking for!");
