@@ -35,7 +35,7 @@ router.get('/health', async (req, res) => {
 // TODO: in the future admin needs to be more fleshed out
 // logging in should generate a token if good creds
 // certain admin routes should require tokens
-router.post('admin/login', async (req, res) => {
+router.post('/admin/login', async (req, res) => {
     const { username, password } = req.body;
 
     if (username !== process.env.ADMIN_USERNAME || password !== process.env.ADMIN_PASSWORD) {
